@@ -1,41 +1,29 @@
-import boto3
-
-#spark
-from pyspark.sql import SparkSession
-import pyspark.sql.functions as F
-from pyspark.sql.types import *
-
-### Read images and vectorize
-from pyspark.ml.image import ImageSchema
-from pyspark.ml.feature import PCA
-from pyspark.ml.feature import StandardScaler
-import time
-
-# featurizer import 
-from functools import reduce
-import tensorflow as tf
-from keras.applications import VGG16
-
 import pandas as pd
 from PIL import Image
 import numpy as np
 import io
 
-import tensorflow as tf
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 from pyspark.sql.functions import monotonically_increasing_id 
-
+from pyspark.sql import SparkSession
+import pyspark.sql.functions as F
+from pyspark.sql.types import *
+from pyspark.ml.feature import PCA , StandardScaler
 from pyspark.sql.functions import col, pandas_udf, PandasUDFType
-from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors
 
-
 run_s3 = False
+  
+if run_s3:
+    # creer une session spark
+    spark = SparkSession.builder.appName('P8-fruits').getOrCreate()
+    sc = spark.sparkContext.getOrCreate()
+    sc.setLogLevel('ERROR')
 
-# create a spark session
-spark = SparkSession.builder.master('local[*]').appName('P8-fruits').getOrCreate()
-sc = spark.sparkContext.getOrCreate()
+else:
+    spark = SparkSession.builder.master('local[*]').appName('P8-fruits').getOrCreate()
+    sc = spark.sparkContext.getOrCreate()
 
 model = ResNet50(include_top=False)
 bc_model_weights = sc.broadcast(model.get_weights())
@@ -45,12 +33,10 @@ def find_label(path):
         return path.split('/')[-2]
 
 #read images locally or from S3 :
-def load_image_into_pspark_df(run_s3 = False):
+def load_image_into_pspark_df(run_s3):
+    global image_path
     if run_s3 :
-        s3 = boto3.client("s3")
-        AWS_REGION = "eu-west-1"
-        bucket = 'echantillon-img'
-        location = {'LocationConstraint': AWS_REGION}
+        image_path = "s3n://echantillon-img"
     else:
         image_path = "/home/adnene/Dev/Projet-8/echantillon-img"
 
@@ -64,9 +50,7 @@ def load_image_into_pspark_df(run_s3 = False):
 
     return images
 
-
 #Extraction des features images :
-
 #procédure décrite dans https://lytix.be/transfer-learning-in-spark-for-image-recognition/ 
 #et dans documentation databricks :
 
@@ -93,9 +77,6 @@ def featurize_series(model, content_series):
   """
   input = np.stack(content_series.map(preprocess))
   preds = model.predict(input)
-  # For some layers, output features will be multi-dimensional tensors.
-  # We flatten the feature tensors to vectors for easier storage in Spark DataFrames.
-  print(preds)
   output = [p.flatten() for p in preds]
   return pd.Series(output)
 
@@ -115,24 +96,25 @@ def featurize_udf(content_series_iter):
     yield featurize_series(model, content_series)
 
 def extract_features_images(im):
-    return im.repartition(4).select(col("path"), col("label"), featurize_udf("content").alias("features"))
+    return im.select(col("path"), col("label"), featurize_udf("content").alias("features"))
 
 def dimension_red(df):
     #spark ne normalise pas les données automatiquement :
     df_index = df.select("*").withColumn("id", monotonically_increasing_id())
     features = df_index.select(['id', 'features'])
     features_RDD = features.rdd.map(lambda x : (x['id'], Vectors.dense(x['features']))).toDF(['id', 'features'])
-   
+    
+    #normalisation
     scaler = StandardScaler(inputCol="features", outputCol="scaledFeatures")
-    # Compute summary statistics by fitting the StandardScaler
     scalerModel = scaler.fit(features_RDD)
-    # Normalize each feature to have unit standard deviation.
     scaledData = scalerModel.transform(features_RDD)
 
+    #pca
     acp = PCA(k=6, inputCol=scaler.getOutputCol(), outputCol="pca_features")
     model_acp = acp.fit(scaledData)
     reduced_feature = model_acp.transform(scaledData)
 
+    #construction df final
     complete_df = df_index.join(reduced_feature.select(['id', 'pca_features']), on=['id']).drop('id')
   
     del acp
@@ -145,9 +127,9 @@ def write_results_into_parquet(df, path_results):
 
 
 if __name__ == "__main__":
-    images = load_image_into_pspark_df()
+    images = load_image_into_pspark_df(run_s3)
     processed = extract_features_images(images)
     results = dimension_red(processed)
     results.show()
-    write_results_into_parquet(results, r"/home/adnene/Dev/Projet-8/echantillon-img/results")
+    write_results_into_parquet(results,  image_path + "/results")
 
