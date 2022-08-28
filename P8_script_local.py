@@ -131,5 +131,5 @@ if __name__ == "__main__":
     processed = extract_features_images(images)
     results = dimension_red(processed)
     results.show()
-    write_results_into_parquet(results,  image_path + "/results")
+    #write_results_into_parquet(results,  image_path + "/results")
 

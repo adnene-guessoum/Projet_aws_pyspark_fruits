@@ -81,7 +81,7 @@ def targetted_random_image_selection(num_img, num_files, pth, to_S3):
         #bucket creation :
         bucket = 'echantillon-img'
         location = {'LocationConstraint': AWS_REGION}
-        response = client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
+        #response = client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
 
         print("Amazon S3 bucket has been created")
 
@@ -106,4 +106,4 @@ def targetted_random_image_selection(num_img, num_files, pth, to_S3):
 
 if __name__ == '__main__':
     #random_image_selection(300, Image_path)
-    targetted_random_image_selection(3, 4, Image_path, to_S3=False)
+    targetted_random_image_selection(3, 4, Image_path, to_S3=True)
