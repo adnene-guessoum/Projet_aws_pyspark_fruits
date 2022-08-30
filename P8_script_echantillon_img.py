@@ -92,7 +92,7 @@ def targetted_random_image_selection(num_img, num_files, pth, to_S3):
             for file in f :
                 path = os.path.join(r,file)
                 r_path = os.path.relpath(path, thisdir)
-                s3_path = r_path
+                s3_path = "Images/" + r_path
 
                 try:
                     client.head_object(Bucket=bucket, Key=s3_path)

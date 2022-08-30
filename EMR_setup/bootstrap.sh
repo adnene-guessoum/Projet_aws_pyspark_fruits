@@ -1,14 +1,18 @@
 #! /bin/bash
 
-pip install boto3
-pip install numpy
-pip install pandas
-pip install Pillow
-pip install pyarrow
-pip install s3fs
-python3 -m pip install boto3
-python3 -m pip install numpy
-python3 -m pip install pandas
-python3 -m pip install Pillow
-python3 -m pip install pyarrow
-python3 -m pip install s3fs
+sudo pip install boto3
+sudo pip install numpy
+sudo pip install pandas
+sudo pip install Pillow
+sudo pip install pyarrow
+sudo pip install sparkdl
+sudo pip install keras
+sudo pip install s3fs
+sudo python3 -m pip install boto3
+sudo python3 -m pip install numpy
+sudo python3 -m pip install pandas
+sudo python3 -m pip install Pillow
+sudo python3 -m pip install pyarrow
+sudo python3 -m pip install s3fs
+sudo python3 -m pip install sparkdl
+sudo python3 -m pip install keras

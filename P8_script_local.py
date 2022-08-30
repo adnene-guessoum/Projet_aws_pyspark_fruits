@@ -36,7 +36,7 @@ def find_label(path):
 def load_image_into_pspark_df(run_s3):
     global image_path
     if run_s3 :
-        image_path = "s3n://echantillon-img"
+        image_path = "s3n://echantillon-img/Images/*"
     else:
         image_path = "/home/adnene/Dev/Projet-8/echantillon-img"
 
@@ -127,7 +127,7 @@ def write_results_into_parquet(df, path_results):
 
 
 if __name__ == "__main__":
-    images = load_image_into_pspark_df(run_s3)
+    images = load_image_into_pspark_df(run_s3=False)
     processed = extract_features_images(images)
     results = dimension_red(processed)
     results.show()

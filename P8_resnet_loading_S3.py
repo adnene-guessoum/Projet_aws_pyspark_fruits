@@ -1,6 +1,5 @@
 import boto3
-from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
-from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.applications.resnet50 import ResNet50
 from keras.models import load_model
 from pyspark.sql import SparkSession
 
@@ -28,10 +27,12 @@ client.upload_file(Filename='my_model.h5',
 
 del model  # deletes the existing model
 
-client = boto3.client('s3')
+print("Done")
+
+'''client = boto3.client('s3')
 client.download_file("echantillon-img",
                      'model/model_res.h5',
                      'my_model.h5')
 # returns a compiled model
 # identical to the previous one
-model = load_model('my_model.h5')
+model = load_model('my_model.h5')'''
