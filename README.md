@@ -29,6 +29,6 @@ Taille des mages: 100x100 pixels.
   - du script python pour les différentes opérations à réaliser.
   - du fichier de configuration du cluster EMR pour un environnement pyspark (config_EMR.json) 
   - du fichier d’amorçage pour installer au lancement des serveurs sur toutes les machines du clusters les dépendances nécessaires pour le script (bootstrap.sh).
-  - Lancement d’un cluster EMR configuré : m5.xlarge, emr 6.7.0, Spark Hadoop 3.2.1, Tensorflow...
-  - Accès à la master node via ssh depuis la ligne de commande. Lancement du script : « spark-submit »
-  - Vérification de l’écriture des résultats dans s3 (parquet) et résiliation du cluster.
+- Lancement d’un cluster EMR configuré : m5.xlarge, emr 6.7.0, Spark Hadoop 3.2.1, Tensorflow...
+- Accès à la master node via ssh depuis la ligne de commande. Lancement du script : « spark-submit »
+- Vérification de l’écriture des résultats dans s3 (parquet) et résiliation du cluster.
